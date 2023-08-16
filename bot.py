@@ -49,6 +49,7 @@ async def toggle_autoapprove(client: Client, message: Message):
 # Handle the callback queries for the inline buttons
 @ryme.on_callback_query(filters.regex("^autoapprove_(on|off)$"))
 async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
+    print("Callback received:", callback_query.data)
     chat_id = callback_query.message.chat.id
     user_id = callback_query.from_user.id
     
