@@ -13,6 +13,11 @@ ryme = Client("autoapprove", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HA
 TEXT = "Hello {}, Welcome To {}"
 ENABLED_GROUPS = set()  # set of chat IDs where auto-approve is enabled
 
+
+@ryme.on_message(filters.private & filters.command('start'))
+async def start(client, message):
+    await message.reply(f"Hi, {message.from_user.mention}\nI can Auto Accept join Request In Your Group, Just Add Me As Admin, Give Necessary Permisssion And Then Send <code>/approve on</code>")
+
 @ryme.on_chat_join_request(filters.group | filters.channel)
 async def autoapprove(client: Client, message: ChatJoinRequest):
     chat_id = message.chat.id
@@ -21,7 +26,7 @@ async def autoapprove(client: Client, message: ChatJoinRequest):
         await client.approve_chat_join_request(chat_id=chat_id, user_id=user.id)
         await client.send_message(chat_id=chat_id, text=TEXT.format(user.mention, message.chat.title))
 
-@ryme.on_message(filters.command("autoapprove") & filters.group)
+@ryme.on_message(filters.command("aapprove") & filters.group)
 async def toggle_autoapprove(client, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
