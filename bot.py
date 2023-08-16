@@ -14,11 +14,11 @@ TEXT = "Hello {}, Welcome To {}"
 ENABLED_GROUPS = set()  # set of chat IDs where auto-approve is enabled
 
 
-@ryme.on_message(filters.private & filters.command('start'))
+@Client.on_message(filters.private & filters.command('start'))
 async def start(client, message):
     await message.reply(f"<b>Hi, {message.from_user.mention}\n\nI can auto approve members in your group.\n\nAdd me to your group and make me admin with all permissions and then send</b> <code>/approve on</code> <b>to enable auto approve.</b>")
 
-@ryme.on_chat_join_request(filters.group | filters.channel)
+@Client.on_chat_join_request(filters.group | filters.channel)
 async def autoapprove(client: Client, message: ChatJoinRequest):
     chat_id = message.chat.id
     if chat_id in ENABLED_GROUPS:
@@ -26,7 +26,7 @@ async def autoapprove(client: Client, message: ChatJoinRequest):
         await client.approve_chat_join_request(chat_id=chat_id, user_id=user.id)
         await client.send_message(chat_id=chat_id, text=TEXT.format(user.mention, message.chat.title))
 
-@ryme.on_message(filters.command("autoapprove") & filters.group)
+@Client.on_message(filters.command("autoapprove") & filters.group)
 async def toggle_autoapprove(client: Client, message: Message):
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -47,13 +47,13 @@ async def toggle_autoapprove(client: Client, message: Message):
     await message.reply(f"Auto approve is currently {status} for this group. Use the buttons below to toggle.", reply_markup=markup)
 
 
-@ryme.on_callback_query(filters.regex("^autoapprove_(on|off)$"))
+@Client.on_callback_query(filters.regex("^autoapprove_(on|off)$"))
 async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
     chat_id = callback_query.message.chat.id
     user_id = callback_query.from_user.id
 
     administrators = []
-    async for m in app.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+    async for m in client.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
         administrators.append(m.user.id)
 
     if user_id not in administrators:
