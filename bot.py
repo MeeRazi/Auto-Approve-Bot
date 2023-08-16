@@ -1,6 +1,6 @@
 from flask import Flask
 from threading import Thread
-from pyrogram import Client, filters
+from pyrogram import Client, filters, enums
 from pyrogram.types import ChatJoinRequest, Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import os
 
@@ -30,13 +30,12 @@ async def autoapprove(client: Client, message: ChatJoinRequest):
 async def toggle_autoapprove(client: Client, message: Message):
     chat_id = message.chat.id
     user_id = message.from_user.id
-    member = await client.get_chat_member(chat_id=chat_id, user_id=user_id)
+    
+    administrators = []
+    async for m in app.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+        administrators.append(m.user.id)
 
-    if not message.from_user:
-        await message.reply("Anonymous admins can't enable or disable auto approve.")
-        return
-
-    if member.status not in ["administrator", "creator"]:
+    if user_id not in administrators:
         await message.reply("Only group admins can enable or disable auto approve.")
         return
 
@@ -47,13 +46,17 @@ async def toggle_autoapprove(client: Client, message: Message):
     ])
     await message.reply(f"Auto approve is currently {status} for this group. Use the buttons below to toggle.", reply_markup=markup)
 
+
 @ryme.on_callback_query(filters.regex("^autoapprove_(on|off)$"))
 async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
     chat_id = callback_query.message.chat.id
     user_id = callback_query.from_user.id
-    member = await client.get_chat_member(chat_id=chat_id, user_id=user_id)
 
-    if member.status not in ["administrator", "creator"]:
+    administrators = []
+    async for m in app.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+        administrators.append(m.user.id)
+
+    if user_id not in administrators:
         await callback_query.answer("Only group admins can enable or disable auto approve.", show_alert=True)
         return
 
