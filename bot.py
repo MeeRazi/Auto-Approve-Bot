@@ -51,21 +51,25 @@ async def toggle_autoapprove(client: Client, message: Message):
 async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
     chat_id = callback_query.message.chat.id
     user_id = callback_query.from_user.id
+    
+    try:
+        administrators = []
+        async for m in client.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+            administrators.append(m.user.id)
 
-    administrators = []
-    async for m in client.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
-        administrators.append(m.user.id)
-
-    if user_id not in administrators:
-        await callback_query.answer("Only group admins can enable or disable auto approve.", show_alert=True)
-        return
-
-    if callback_query.data == "autoapprove_on":
-        ENABLED_GROUPS.add(chat_id)
-        await callback_query.message.edit_text("Auto approve is now enabled for this group.")
-    elif callback_query.data == "autoapprove_off":
-        ENABLED_GROUPS.discard(chat_id)
-        await callback_query.message.edit_text("Auto approve is now disabled for this group.")
+        if user_id not in administrators:
+            await callback_query.answer("Only group admins can enable or disable auto approve.", show_alert=True)
+            return
+        
+        if callback_query.data == "autoapprove_on":
+            ENABLED_GROUPS.add(chat_id)
+            await callback_query.message.edit_text("Auto approve is now enabled for this group.")
+        elif callback_query.data == "autoapprove_off":
+            ENABLED_GROUPS.discard(chat_id)
+            await callback_query.message.edit_text("Auto approve is now disabled for this group.")
+            
+    except Exception as e:
+        await callback_query.answer(f"An error occurred: {e}", show_alert=True)        
 
 
 # Flask configuration
