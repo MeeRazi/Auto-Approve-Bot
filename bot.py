@@ -9,7 +9,7 @@ API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-ryme = Client(bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
+ryme = Client("autoapprove", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 TEXT = "Hello {}, Welcome To {}"
 ENABLED_GROUPS = set()  # set of chat IDs where auto-approve is enabled
 
