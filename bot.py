@@ -1,7 +1,7 @@
 from flask import Flask
 from threading import Thread
 from pyrogram import Client, filters
-from pyrogram.types import ChatJoinRequest, Message
+from pyrogram.types import ChatJoinRequest, Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import os
 
 # Pyrogram configuration
@@ -26,33 +26,43 @@ async def autoapprove(client: Client, message: ChatJoinRequest):
         await client.approve_chat_join_request(chat_id=chat_id, user_id=user.id)
         await client.send_message(chat_id=chat_id, text=TEXT.format(user.mention, message.chat.title))
 
-@ryme.on_message(filters.command("approve") & filters.group)
+@ryme.on_message(filters.command("autoapprove") & filters.group)
 async def toggle_autoapprove(client: Client, message: Message):
     chat_id = message.chat.id
     user_id = message.from_user.id
     member = await client.get_chat_member(chat_id=chat_id, user_id=user_id)
 
     if not message.from_user:
-        await message.reply("Anonymous admins can't toggle auto approve.")
+        await message.reply("Anonymous admins can't enable or disable auto approve.")
         return
-    
+
     if member.status not in ["administrator", "creator"]:
         await message.reply("Only group admins can enable or disable auto approve.")
         return
 
-    if len(message.command) > 1:
-        action = message.command[1].lower()
-        if action == "on":
-            ENABLED_GROUPS.add(chat_id)
-            await message.reply("Auto approve is now enabled for this group.")
-        elif action == "off":
-            ENABLED_GROUPS.discard(chat_id)
-            await message.reply("Auto approve is now disabled for this group.")
-        else:
-            await message.reply("Invalid argument. Use 'on' or 'off'.")
-    else:
-        status = "enabled" if chat_id in ENABLED_GROUPS else "disabled"
-        await message.reply(f"Auto approve is currently {status} for this group. Use 'on' or 'off' to toggle.")
+    status = "enabled" if chat_id in ENABLED_GROUPS else "disabled"
+    markup = InlineKeyboardMarkup([
+        [InlineKeyboardButton("ON", callback_data="autoapprove_on"),
+         InlineKeyboardButton("OFF", callback_data="autoapprove_off")]
+    ])
+    await message.reply(f"Auto approve is currently {status} for this group. Use the buttons below to toggle.", reply_markup=markup)
+
+@ryme.on_callback_query(filters.regex("^autoapprove_(on|off)$"))
+async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
+    chat_id = callback_query.message.chat.id
+    user_id = callback_query.from_user.id
+    member = await client.get_chat_member(chat_id=chat_id, user_id=user_id)
+
+    if member.status not in ["administrator", "creator"]:
+        await callback_query.answer("Only group admins can enable or disable auto approve.", show_alert=True)
+        return
+
+    if callback_query.data == "autoapprove_on":
+        ENABLED_GROUPS.add(chat_id)
+        await callback_query.message.edit_text("Auto approve is now enabled for this group.")
+    elif callback_query.data == "autoapprove_off":
+        ENABLED_GROUPS.discard(chat_id)
+        await callback_query.message.edit_text("Auto approve is now disabled for this group.")
 
 
 # Flask configuration
