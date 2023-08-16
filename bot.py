@@ -1,7 +1,7 @@
 from flask import Flask
 from threading import Thread
 from pyrogram import Client, filters
-from pyrogram.types import ChatJoinRequest
+from pyrogram.types import ChatJoinRequest, Message
 import os
 
 # Pyrogram configuration
@@ -16,7 +16,7 @@ ENABLED_GROUPS = set()  # set of chat IDs where auto-approve is enabled
 
 @ryme.on_message(filters.private & filters.command('start'))
 async def start(client, message):
-    await message.reply(f"Hi, {message.from_user.mention}\nI can Auto Accept join Request In Your Group, Just Add Me As Admin, Give Necessary Permisssion And Then Send <code>/approve on</code>")
+    await message.reply(f"<b>Hi, {message.from_user.mention}\n\n<b>I can auto approve members in your group.\n\nAdd me to your group and make me admin with all permissions and then send</b> <code>/autoapprove on</code> to enable auto approve.")
 
 @ryme.on_chat_join_request(filters.group | filters.channel)
 async def autoapprove(client: Client, message: ChatJoinRequest):
@@ -26,8 +26,11 @@ async def autoapprove(client: Client, message: ChatJoinRequest):
         await client.approve_chat_join_request(chat_id=chat_id, user_id=user.id)
         await client.send_message(chat_id=chat_id, text=TEXT.format(user.mention, message.chat.title))
 
-@ryme.on_message(filters.command("aapprove") & filters.group)
-async def toggle_autoapprove(client, message):
+@app.on_message(filters.command("autoapprove") & filters.group)
+async def toggle_autoapprove(client: Client, message: Message):
+    if not message.from_user:
+        await message.reply("Cannot identify the user.")
+        return
     chat_id = message.chat.id
     user_id = message.from_user.id
     member = await client.get_chat_member(chat_id=chat_id, user_id=user_id)
@@ -53,7 +56,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return "Hello, this is my Pyrogram bot!"
+    return "Hello Friend!"
 
 def run():
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
