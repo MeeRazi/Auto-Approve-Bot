@@ -41,13 +41,13 @@ async def toggle_autoapprove(client: Client, message: Message):
 
     status = "enabled" if chat_id in ENABLED_GROUPS else "disabled"
     markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton("ON", callback_data="approve_on"),
-         InlineKeyboardButton("OFF", callback_data="approve_off")]
+        [InlineKeyboardButton("ON", callback_data="autoapprove_on"),
+         InlineKeyboardButton("OFF", callback_data="autoapprove_off")]
     ])
     await message.reply(f"Auto approve is currently {status} for this group. Use the buttons below to toggle.", reply_markup=markup)
 
-
-@ryme.on_callback_query(filters.regex("^approve_(on|off)$"))
+# Handle the callback queries for the inline buttons
+@ryme.on_callback_query(filters.regex("^autoapprove_(on|off)$"))
 async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
     chat_id = callback_query.message.chat.id
     user_id = callback_query.from_user.id
@@ -69,8 +69,8 @@ async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
             await callback_query.message.edit_text("Auto approve is now disabled for this group.")
             
     except Exception as e:
-        await callback_query.answer(f"An error occurred: {e}", show_alert=True)        
-
+        await callback_query.answer(f"An error occurred: {e}", show_alert=True)
+        
 
 # Flask configuration
 app = Flask(__name__)
