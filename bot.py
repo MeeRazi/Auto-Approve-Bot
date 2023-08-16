@@ -26,13 +26,13 @@ async def autoapprove(client: Client, message: ChatJoinRequest):
         await client.approve_chat_join_request(chat_id=chat_id, user_id=user.id)
         await client.send_message(chat_id=chat_id, text=TEXT.format(user.mention, message.chat.title))
 
-@ryme.on_message(filters.command("autoapprove") & filters.group)
+@ryme.on_message(filters.command("approve") & filters.group)
 async def toggle_autoapprove(client: Client, message: Message):
     chat_id = message.chat.id
     user_id = message.from_user.id
     
     administrators = []
-    async for m in app.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+    async for m in client.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
         administrators.append(m.user.id)
 
     if user_id not in administrators:
@@ -41,13 +41,13 @@ async def toggle_autoapprove(client: Client, message: Message):
 
     status = "enabled" if chat_id in ENABLED_GROUPS else "disabled"
     markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton("ON", callback_data="autoapprove_on"),
-         InlineKeyboardButton("OFF", callback_data="autoapprove_off")]
+        [InlineKeyboardButton("ON", callback_data="approve_on"),
+         InlineKeyboardButton("OFF", callback_data="approve_off")]
     ])
     await message.reply(f"Auto approve is currently {status} for this group. Use the buttons below to toggle.", reply_markup=markup)
 
 
-@ryme.on_callback_query(filters.regex("^autoapprove_(on|off)$"))
+@ryme.on_callback_query(filters.regex("^approve_(on|off)$"))
 async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
     chat_id = callback_query.message.chat.id
     user_id = callback_query.from_user.id
