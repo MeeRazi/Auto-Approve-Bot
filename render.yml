@@ -1,0 +1,6 @@
+services:
+- type: web
+  name: pyrogram-bot
+  env: docker
+  build:
+    dockerfile: Dockerfile
