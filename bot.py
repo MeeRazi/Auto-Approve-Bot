@@ -16,7 +16,7 @@ ENABLED_GROUPS = set()  # set of chat IDs where auto-approve is enabled
 
 @ryme.on_message(filters.private & filters.command('start'))
 async def start(client, message):
-    await message.reply(f"<b>Hi, {message.from_user.mention}\n\nI can auto approve members in your group.\n\nAdd me to your group and make me admin with all permissions and then send</b> <code>/approve on</code> to enable auto approve.")
+    await message.reply(f"<b>Hi, {message.from_user.mention}\n\nI can auto approve members in your group.\n\nAdd me to your group and make me admin with all permissions and then send</b> <code>/approve on</code> <b>to enable auto approve.</b>")
 
 @ryme.on_chat_join_request(filters.group | filters.channel)
 async def autoapprove(client: Client, message: ChatJoinRequest):
