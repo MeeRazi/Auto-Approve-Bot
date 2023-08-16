@@ -28,28 +28,32 @@ async def autoapprove(client: Client, message: ChatJoinRequest):
 
 @ryme.on_message(filters.command("approve") & filters.group)
 async def toggle_autoapprove(client: Client, message: Message):
-    if not message.from_user:
-        await message.reply("Cannot identify the user.")
-        return
     chat_id = message.chat.id
     user_id = message.from_user.id
     member = await client.get_chat_member(chat_id=chat_id, user_id=user_id)
-    if member.status in ["administrator", "creator"]:
-        if len(message.command) > 1:
-            action = message.command[1].lower()
-            if action == "on":
-                ENABLED_GROUPS.add(chat_id)
-                await message.reply("Auto approve is now enabled for this group.")
-            elif action == "off":
-                ENABLED_GROUPS.discard(chat_id)
-                await message.reply("Auto approve is now disabled for this group.")
-            else:
-                await message.reply("Invalid argument. Use 'on' or 'off'.")
+
+    if not message.from_user:
+        await message.reply("Anonymous admins can't toggle auto approve.")
+        return
+    
+    if member.status not in ["administrator", "creator"]:
+        await message.reply("Only group admins can enable or disable auto approve.")
+        return
+
+    if len(message.command) > 1:
+        action = message.command[1].lower()
+        if action == "on":
+            ENABLED_GROUPS.add(chat_id)
+            await message.reply("Auto approve is now enabled for this group.")
+        elif action == "off":
+            ENABLED_GROUPS.discard(chat_id)
+            await message.reply("Auto approve is now disabled for this group.")
         else:
-            status = "enabled" if chat_id in ENABLED_GROUPS else "disabled"
-            await message.reply(f"Auto approve is currently {status} for this group. Use 'on' or 'off' to toggle.")
+            await message.reply("Invalid argument. Use 'on' or 'off'.")
     else:
-        await message.reply("Only group admins can enable or disable auto approve for this group.")
+        status = "enabled" if chat_id in ENABLED_GROUPS else "disabled"
+        await message.reply(f"Auto approve is currently {status} for this group. Use 'on' or 'off' to toggle.")
+
 
 # Flask configuration
 app = Flask(__name__)
