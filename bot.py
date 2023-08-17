@@ -75,7 +75,7 @@ async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
             await callback_query.message.edit_text("Auto approve is now disabled for this group.")
             
     except Exception as e:
-        await callback_query.answer(f"An error occurred: {e}", show_alert=True)
+        print(f"An error occurred: {e}")
         
 
 # Flask configuration
