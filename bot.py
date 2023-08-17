@@ -32,7 +32,7 @@ async def toggle_autoapprove(client: Client, message: Message):
     user_id = message.from_user.id
      
     # Check if the message is from a private chat
-    if message.chat.type in enums.ChatType.PRIVATE:
+    if message.chat.type in [enums.ChatType.PRIVATE]:
         await message.reply("This command can only be used in groups.")
         return
 
