@@ -9,16 +9,25 @@ API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-ryme = Client("autoapprove", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
+bot = Client("autoapprove", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 TEXT = "Hello {}, Welcome To {}"
 ENABLED_GROUPS = set()  # set of chat IDs where auto-approve is enabled
 
 
-@ryme.on_message(filters.private & filters.command('start'))
+@bot.on_message(filters.private & filters.command('start'))
 async def start(client, message):
-    await message.reply(f"<b>Hello {message.from_user.mention},</b>\n\n<b>Welcome! I'm here to help you manage your group by automatically approving new members. To get started:</b>\n\n1. Please add me to your group.\n2. Ensure I have administrative rights with full permissions.\n3. Once that's set up, just send the command /approve in the group, and I'll handle the rest.")
+    username = (await client.get_me()).username
+    button = [[
+        InlineKeyboardButton("➕ Add me in your Group", url=f"http://t.me/{username}?startgroup=none&admin=invite_users"),
+        ],[
+        InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
+    ]]
+    await message.reply(
+        f"<b>Hello {message.from_user.mention},</b>\n\n<b>Welcome! I'm here to help you manage your group by automatically approving new members. To get started:</b>\n\n1. Please add me to your group.\n2. Ensure I have administrative rights with full permissions.\n3. Once that's set up, just send the command /approve in the group, and I'll handle the rest.",
+        reply_markup=InlineKeyboardMarkup(button)
+    )
 
-@ryme.on_chat_join_request(filters.group | filters.channel)
+@bot.on_chat_join_request(filters.group | filters.channel)
 async def autoapprove(client: Client, message: ChatJoinRequest):
     chat_id = message.chat.id
     if chat_id in ENABLED_GROUPS:
@@ -26,7 +35,7 @@ async def autoapprove(client: Client, message: ChatJoinRequest):
         await client.approve_chat_join_request(chat_id=chat_id, user_id=user.id)
         await client.send_message(chat_id=chat_id, text=TEXT.format(user.mention, message.chat.title))
 
-@ryme.on_message(filters.command("approve"))
+@bot.on_message(filters.command("approve"))
 async def toggle_autoapprove(client: Client, message: Message):
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -52,7 +61,7 @@ async def toggle_autoapprove(client: Client, message: Message):
     await message.reply(f"Auto approve is currently {status} for this group. Use the buttons below to toggle.", reply_markup=markup)
 
 # Handle the callback queries for the inline buttons
-@ryme.on_callback_query(filters.regex("^autoapprove_(on|off)$"))
+@bot.on_callback_query(filters.regex("^autoapprove_(on|off)$"))
 async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
     print("Callback received:", callback_query.data)
     chat_id = callback_query.message.chat.id
@@ -79,16 +88,16 @@ async def callback_autoapprove(client: Client, callback_query: CallbackQuery):
         
 
 # Flask configuration
-app = Flask(__name__)
+web = Flask(__name__)
 
-@app.route('/')
+@web.route('/')
 def index():
     return "Hello Friend!"
 
 def run():
-    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
+    web.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
 
 if __name__ == "__main__":
     t = Thread(target=run)
     t.start()
-    ryme.run()
+    bot.run()
