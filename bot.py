@@ -14,7 +14,7 @@ TEXT = "Hello {}, Welcome To {}"
 ENABLED_GROUPS = set()  # set of chat IDs where auto-approve is enabled
 
 
-@bot.on_message(filters.command('start'))
+@bot.on_message(filters.private & filters.command('start'))
 async def start(client, message):
     username = (await client.get_me()).username
     button = [[
@@ -23,7 +23,7 @@ async def start(client, message):
         InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
     ]]
     await message.reply(
-        f"<b>Hello {message.from_user.mention},</b>\n\n<b>Welcome! I'm here to help you manage your group by automatically approving new members. To get started:</b>\n\nAdd me to your group with invite users permissions then send the command /approve in the group, and I'll handle the rest.",
+        f"<b>Hello {message.from_user.mention},</b>\n\n<b>Welcome! I'm here to help you manage your group by automatically approving new members,\nAdd me to your group with invite users permissions then send the command /approve in the group, and I'll handle the rest.</b>",
         reply_markup=InlineKeyboardMarkup(button)
     )
 
